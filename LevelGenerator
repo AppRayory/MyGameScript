@@ -1,0 +1,109 @@
+public class PlatformGenerator : MonoBehaviour
+{
+    public static PlatformGenerator instance;
+
+    Transform Cam;
+    [Header("Easy Group Settings:")]
+    public int rand, easyMin, easyMax;
+
+    public GameObject Player;
+    public GameObject[] easyGroup;
+
+    [Header("Medium Group Settings:")]
+    public GameObject[] mediumGroup;
+    public int mediumMin, mediumMax, mRand;
+    
+
+    [Header("Score & Transform:")]
+    public Transform SpawnPos;
+    public int Score, HighScore;
+    public const string leaderBoard = "";
+    public Text ScoreText, gameOverText, highScoreText;
+
+    private void Awake()
+    {
+        instance = this;
+        if (PlayerPrefs.HasKey("SaveScore"))
+        {
+            HighScore = PlayerPrefs.GetInt("SaveScore");
+        }
+        UpdateLeaderboard();
+    }
+
+
+    void Start()
+    {
+        Cam = GameObject.Find("Main Camera").transform;
+    }
+
+    void Update()
+    {
+        if(gameObject.transform.position.y < 300)
+        {
+            if (gameObject.transform.position.y < SpawnPos.transform.position.y)
+            {
+                Spawing();
+            }
+           
+        }
+        else if(gameObject.transform.position.y > 300)
+        {
+            if (gameObject.transform.position.y < SpawnPos.transform.position.y)
+            {
+                SpawningMedium();
+            }
+        }
+
+        ScoreBar();
+    }
+
+    void Spawing()
+    {
+        rand = Random.Range(easyMin, easyMax);
+        GameObject G = Instantiate(easyGroup[rand]) as GameObject;
+        G.transform.position = gameObject.transform.position;
+        gameObject.transform.Translate(0, 34, 0);
+    }
+
+    void SpawningMedium()
+    {
+        rand = Random.Range(mediumMin, mediumMax);
+        GameObject G = Instantiate(mediumGroup[rand]) as GameObject;
+        G.transform.position = gameObject.transform.position;
+        gameObject.transform.Translate(0, 34, 0);
+    }
+
+    void ScoreBar()
+    {
+        if (Player.transform.position.y > Cam.transform.position.y)
+        {
+            Score += 10;
+            ScoreText.text = Score.ToString();
+            gameOverText.text = Score.ToString();
+        }
+
+        HighScoreBar();
+    }
+
+    public void HighScoreBar()
+    {
+        if (Score > HighScore)
+        {
+            HighScore = Score;
+            highScoreText.text = HighScore.ToString();
+            PlayerPrefs.SetInt("SaveScore", HighScore);
+        }
+        else if(Score < HighScore)
+        {
+            highScoreText.text = HighScore.ToString();
+        }
+        
+    }
+    public void UpdateLeaderboard()
+    {
+        Social.ReportScore(PlayerPrefs.GetInt("SaveScore"), leaderBoard, (bool success) =>
+        {
+            if (success) print("Subbmit to Leaderboart");
+        });
+    }
+}
