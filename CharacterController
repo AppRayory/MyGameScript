@@ -12,7 +12,7 @@ public class CharacterController : MonoBehaviour
     public WingsSpawnPos Wings;
     public DeathMenu deathMenu;
     public GameObject pl;
-    public static int deathScore { get; private set; } = 0;
+    public GameObject shieldObject;
     public WaitingForDeath waithdeath;
     [Header("Transform Ref:")]
     public Transform TopSpawn;
@@ -22,11 +22,12 @@ public class CharacterController : MonoBehaviour
     public PlayerAudioSourcer hitDamage; // Plays when Player gets damage
     public PlayerAudioSourcer wingsSound; // Plays when Player flying
     Animator anim;
-    public GameObject shieldObject;
+    
 
     [HideInInspector] public bool shield = false;
     [HideInInspector] public bool isFly = false;
     [HideInInspector] public bool canTakeHelmet = true;
+    public static int deathScore { get; private set; } = 0;
     public float speed;
     public float restartDelay = 0.3f;
 
