@@ -19,7 +19,7 @@ public class CharacterController : MonoBehaviour
     public SliderBuff sliderBuff;
     [Header("Audio Sourcer:")]
     public PlayerAudioSourcer reward; // Plays when Player takes Wings Buff/1000/500 points 
-    public PlayerAudioSourcer hitDamage; // Plays when Player got damage
+    public PlayerAudioSourcer hitDamage; // Plays when Player gets damage
     public PlayerAudioSourcer wingsSound; // Plays when Player flying
     Animator anim;
     public GameObject shieldObject;
