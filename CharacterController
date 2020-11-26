@@ -1,0 +1,249 @@
+public class CharacterController : MonoBehaviour
+{
+    [HideInInspector] public Rigidbody2D rb;
+    [HideInInspector] public BoxCollider2D bx;
+    [HideInInspector] public RotateGun rotat;
+    [HideInInspector] public AnimationRope ropAnim;
+    [HideInInspector] public RopeS scrpt;
+    [HideInInspector] public AnimationRope RopeAnimScrpt;
+    [HideInInspector] public LineRenderer LRrope;
+    public PlatformGenerator GameController;
+    [Header("Physics Ref:")]
+    public WingsSpawnPos Wings;
+    public DeathMenu deathMenu;
+    public GameObject pl;
+    public static int deathScore { get; private set; } = 0;
+    public WaitingForDeath waithdeath;
+    [Header("Transform Ref:")]
+    public Transform TopSpawn;
+    public SliderBuff sliderBuff;
+    [Header("Audio Sourcer:")]
+    public PlayerAudioSourcer reward; // Plays when Player takes Wings Buff/1000/500 points 
+    public PlayerAudioSourcer hitDamage; // Plays when Player got damage
+    public PlayerAudioSourcer wingsSound; // Plays when Player flying
+    Animator anim;
+    public GameObject shieldObject;
+
+    [HideInInspector] public bool shield = false;
+    [HideInInspector] public bool isFly = false;
+    [HideInInspector] public bool canTakeHelmet = true;
+    public float speed;
+    public float restartDelay = 0.3f;
+
+    public void OnEnable()
+    {
+        if (deathScore >= 4)
+        {
+            deathScore = 0;
+            AdMob.instance.ShowInterstitialAd();
+        }
+    }
+
+    void Start()
+    {
+
+        anim = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
+        scrpt = GetComponent<RopeS>();
+    }
+
+    void Update()
+    {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        if(mousePos.x > pl.transform.position.x)
+        {
+            this.GetComponent<SpriteRenderer>().flipX = false;
+        }
+        else if (mousePos.x < pl.transform.position.x)
+        {
+            this.GetComponent<SpriteRenderer>().flipX = true;
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (isFly)
+        {
+            rb.velocity = transform.up * speed;
+        }
+    }
+
+    public void BuffWings()
+    {
+        
+    }
+
+    public void StartFly()
+    {
+        anim.Play("PlayerHelmetFly");
+        isFly = true;
+        canTakeHelmet = false;
+        scrpt.enabled = false;
+        rotat.enabled = false;
+        scrpt.DestroyRope();
+        bx.isTrigger = true;
+        shield = true;
+        
+    }
+
+    public void EndFlying()
+    {
+        StartCoroutine(SteelShield()); // End shield effect affter flying
+        Wings.DroppWings(); //Spawn Wings dropped
+        sliderBuff.DestroyObject(); // End slider buff visual
+        scrpt.checker = true;
+        bx.isTrigger = false;
+        anim.Play("PlayerFlyingAnim");
+        isFly = false;
+        scrpt.enabled = true;
+        rotat.enabled = true;
+        rb.gravityScale = 2.5f;
+        wingsSound.StopWingsSound();
+    }
+
+    public void Shield() // active when Player got Wing buff
+    {
+        if (shield == false)
+        {
+            isDeath(); // check, does Player can die or not?
+            hitDamage.Damage(); // play sound
+        }
+        else
+        {
+            shield = true;
+        }
+    }
+
+    public void isDeath()
+    {
+        if (isFly)
+        {
+           scrpt.enabled = false;
+           rotat.enabled = false;
+           bx.isTrigger = true;
+        }
+        else
+        {
+            wingsSound.StopWingsSound();
+            hitDamage.enabled = false;
+            anim.Play("PlayerCryAnim");
+            scrpt.enabled = false;
+            rotat.enabled = false;
+            ropAnim.enabled = false;
+            rb.gravityScale = 10;
+            scrpt.DestroyRope();
+            RopeAnimScrpt.enabled = false;
+            LRrope.enabled = false;
+            waithdeath.WaithForDeath(); // wait for deathmenu;
+        }
+
+    }
+
+    public void WaitForDeathMenu()
+    {
+        Invoke("deathMenu.Ending()", restartDelay);
+    }
+
+    public IEnumerator ShieldActive() 
+    {
+        yield return new WaitForSeconds(9.5f);
+        shieldObject.SetActive(false);
+        shield = false;
+    }
+
+    public IEnumerator SteelShield()
+    {
+        yield return new WaitForFixedUpdate();
+        shieldObject.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+        shield = false;
+        shieldObject.SetActive(false);
+        yield return new WaitForSeconds(0.2f);
+        canTakeHelmet = true;
+    }
+
+    #region Trigger & Collision ------------------------------------------------------------------------------
+    private void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.CompareTag("Damage"))
+        {
+            Shield();
+        }
+
+        else if (col.gameObject.name.Equals("1000"))
+        {
+            GameController.Score += 1000;
+            GameController.ScoreText.text = GameController.Score.ToString();
+            Destroy(col.gameObject);
+            reward.Reward();
+        }
+        else if (col.gameObject.name.Equals("500"))
+        {
+            GameController.Score += 500;
+            GameController.ScoreText.text = GameController.Score.ToString();
+            Destroy(col.gameObject);
+            reward.Reward();
+        }
+        else if (col.gameObject.name.Equals("ArmHitRight"))
+        {
+            Shield();
+        }
+        else if (col.gameObject.name.Equals("bottom"))
+        {
+           deathScore++;
+        }
+        else if (col.gameObject.name.Equals("GreenDragon"))
+        {
+
+            Shield();
+        }
+        else if (col.gameObject.name.Equals("ArmHitLeft"))
+        {
+            Shield();
+        }
+        if (col.gameObject.CompareTag("BuffWings"))
+        {
+            if (canTakeHelmet == true)
+            {
+                wingsSound.WingsSound();
+                sliderBuff.StartSlider();
+                StartFly();
+                Destroy(col.gameObject);
+                reward.Reward();
+            }           
+        }
+        if (col.gameObject.CompareTag("ShieldBuff"))
+        {
+            shieldObject.SetActive(true);
+            shield = true;
+            StartCoroutine(ShieldActive());
+            Destroy(col.gameObject);
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.name.Equals("MovePlatform")) 
+        {
+            this.transform.parent = collision.transform; // Player moving with platform
+        }
+       
+        else if (collision.gameObject.name.Equals("DragonEnemy"))
+        {
+            Shield();
+        }
+        else if (collision.gameObject.name.Equals("stone"))
+        {
+            Shield();
+        }
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.name.Equals("MovePlatform"))
+        {
+            this.transform.parent = null;
+        }
+    }
+    #endregion End Trigger & Collsion region-------------------------------------------------------------------
+}
