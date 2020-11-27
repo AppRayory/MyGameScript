@@ -60,16 +60,11 @@ public class CharacterController : MonoBehaviour
         {
             this.GetComponent<SpriteRenderer>().flipX = true;
         }
-    }
-
-    private void FixedUpdate()
-    {
         if (isFly)
         {
             rb.velocity = transform.up * speed;
         }
     }
-
     public void BuffWings()
     {
         
