@@ -4,22 +4,29 @@ public class CharacterController : MonoBehaviour
     [HideInInspector] public BoxCollider2D bx;
     [HideInInspector] public RotateGun rotat;
     [HideInInspector] public AnimationRope ropAnim;
-    [HideInInspector] public RopeS scrpt;
+    [HideInInspector] public RopeS mainControll;
     [HideInInspector] public AnimationRope RopeAnimScrpt;
     [HideInInspector] public LineRenderer LRrope;
+
+
+
     public PlatformGenerator GameController;
-    [Header("Physics Ref:")]
-    public WingsSpawnPos Wings;
     public DeathMenu deathMenu;
+    public SliderBuff sliderBuff;
+    public WingsSpawnPos Wings;
+    public WaitingForDeath waithdeath;
+
+
+    [Header("Physics Ref:")]    
     public GameObject pl;
     public GameObject shieldObject;
-    public WaitingForDeath waithdeath;
+    public static int deathScore { get; private set; } = 0;
+    
     [Header("Transform Ref:")]
     public Transform TopSpawn;
-    public SliderBuff sliderBuff;
     [Header("Audio Sourcer:")]
     public PlayerAudioSourcer reward; // Plays when Player takes Wings Buff/1000/500 points 
-    public PlayerAudioSourcer hitDamage; // Plays when Player gets damage
+    public PlayerAudioSourcer hitDamage; // Plays when Player got damage
     public PlayerAudioSourcer wingsSound; // Plays when Player flying
     Animator anim;
     
@@ -27,7 +34,8 @@ public class CharacterController : MonoBehaviour
     [HideInInspector] public bool shield = false;
     [HideInInspector] public bool isFly = false;
     [HideInInspector] public bool canTakeHelmet = true;
-    public static int deathScore { get; private set; } = 0;
+
+
     public float speed;
     public float restartDelay = 0.3f;
 
@@ -45,7 +53,7 @@ public class CharacterController : MonoBehaviour
 
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        scrpt = GetComponent<RopeS>();
+        mainControll = GetComponent<RopeS>();
     }
 
     void Update()
@@ -60,15 +68,19 @@ public class CharacterController : MonoBehaviour
         {
             this.GetComponent<SpriteRenderer>().flipX = true;
         }
-        BuffWings();
     }
-    
-    public void BuffWings()
+
+    private void FixedUpdate()
     {
         if (isFly)
         {
             rb.velocity = transform.up * speed;
         }
+    }
+
+    public void BuffWings()
+    {
+        
     }
 
     public void StartFly()
@@ -99,7 +111,7 @@ public class CharacterController : MonoBehaviour
         wingsSound.StopWingsSound();
     }
 
-    public void Shield() // active when Player gets Wing buff
+    public void Shield() // active when Player got Wing buff
     {
         if (shield == false)
         {
